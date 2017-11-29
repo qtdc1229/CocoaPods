@@ -402,7 +402,9 @@ module Pod
           def create_test_target_copy_resources_script(test_type)
             path = target.copy_resources_script_path_for_test_type(test_type)
             pod_targets = target.all_test_dependent_targets
-            resource_paths_by_config = { 'Debug' => pod_targets.flat_map(&:resource_paths) }
+            resource_paths_by_config = target.user_build_configurations.keys.each_with_object({}) do |config, resources_by_config|
+              resources_by_config[config] = pod_targets.flat_map(&:resource_paths)
+            end
             generator = Generator::CopyResourcesScript.new(resource_paths_by_config, target.platform)
             update_changed_file(generator, path)
             add_file_to_support_group(path)
@@ -418,7 +420,9 @@ module Pod
           def create_test_target_embed_frameworks_script(test_type)
             path = target.embed_frameworks_script_path_for_test_type(test_type)
             pod_targets = target.all_test_dependent_targets
-            framework_paths_by_config = { 'Debug' => pod_targets.flat_map(&:framework_paths) }
+            framework_paths_by_config = target.user_build_configurations.keys.each_with_object({}) do |config, paths_by_config|
+              paths_by_config[config] = pod_targets.flat_map(&:framework_paths)
+            end
             generator = Generator::EmbedFrameworksScript.new(framework_paths_by_config)
             update_changed_file(generator, path)
             add_file_to_support_group(path)
@@ -467,13 +471,14 @@ module Pod
             build_phase = native_target.new_shell_script_build_phase('Setup Static Framework')
             build_phase.shell_script = <<-eos.strip_heredoc
           mkdir -p "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/Modules"
-          cp "${BUILT_PRODUCTS_DIR}/lib${PRODUCT_NAME}.a" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/${PRODUCT_NAME}"
-          cp "${MODULEMAP_FILE}" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/Modules/module.modulemap"
+          # The fat library archive is at a file symbolic link when archiving, so use -L option
+          rsync -tL "${BUILT_PRODUCTS_DIR}/lib${PRODUCT_NAME}.a" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/${PRODUCT_NAME}"
+          rsync -t "${MODULEMAP_FILE}" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/Modules/module.modulemap"
           # If there's a .swiftmodule, copy it into the framework's Modules folder
-          cp -r "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}".swiftmodule "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/Modules/" 2>/dev/null || :
+          rsync -tr "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}".swiftmodule "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/Modules/" 2>/dev/null || :
           # If archiving, Headers copy is needed
-          cp -r "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.framework/Headers" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/" 2>/dev/null || :
-          cp -r "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.framework/PrivateHeaders" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/" 2>/dev/null || :
+          rsync -tr "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.framework/Headers" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/" 2>/dev/null || :
+          rsync -tr "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.framework/PrivateHeaders" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.framework/" 2>/dev/null || :
             eos
           end
 
@@ -631,7 +636,9 @@ module Pod
 
           def add_header(build_file, public_headers, private_headers, native_target)
             file_ref = build_file.file_ref
-            acl = if public_headers.include?(file_ref.real_path)
+            acl = if !target.requires_frameworks? # Headers are already rooted at ${PODS_ROOT}/Headers/P*/[pod]/...
+                    'Project'
+                  elsif public_headers.include?(file_ref.real_path)
                     'Public'
                   elsif private_headers.include?(file_ref.real_path)
                     'Private'

@@ -8,13 +8,50 @@ To install release candidates run `[sudo] gem install cocoapods --pre`
 
 ##### Enhancements
 
+* Add color indication to output of `pod outdated`  
+  [iv-mexx](https://github.com/iv-mexx)
+  [#7204](https://github.com/CocoaPods/CocoaPods/pull/7204)
+
 * Add support for editing the podspec, license, README, license, and docs of local development pods  
   [Eric Amorde](https://github.com/amorde)
   [#7093](https://github.com/CocoaPods/CocoaPods/pull/7093)
 
 ##### Bug Fixes
 
-* Prevent passing empty string to git when running `pod repo update --silent`
+* Fix static framework archive regression from #7187  
+  [Paul Beusterien](https://github.com/paulb777)
+  [#7225](https://github.com/CocoaPods/CocoaPods/issues/7225)
+
+* Install resource bundles and embed frameworks for every test target's configuration  
+  [Nickolay Tarbayev](https://github.com/tarbayev)
+  [#7012](https://github.com/CocoaPods/CocoaPods/issues/7012)
+
+* Set `SWIFT_VERSION` to test native targets during validation  
+  [Dimitris Koutsogiorgas](https://github.com/dnkoutso)
+  [#7216](https://github.com/CocoaPods/CocoaPods/pull/7216)
+
+* Add copied resources' paths to "Copy Pods Resources" output file list  
+  [igor-makarov](https://github.com/igor-makarov)
+  [#6936](https://github.com/CocoaPods/CocoaPods/issues/6936)
+
+* Do not link system frameworks of test specs to library targets  
+  [Dimitris Koutsogiorgas](https://github.com/dnkoutso)
+  [#7205](https://github.com/CocoaPods/CocoaPods/pull/7205)
+
+* Be more lenient when stripping frameworks and dSYMs for non fat binaries  
+  [Dimitris Koutsogiorgas](https://github.com/dnkoutso)
+  [#7196](https://github.com/CocoaPods/CocoaPods/issues/7196)
+  [#5854](https://github.com/CocoaPods/CocoaPods/issues/5854)
+
+* Do not display script phases warnings multiple times per platform  
+  [Dimitris Koutsogiorgas](https://github.com/dnkoutso)
+  [#7193](https://github.com/CocoaPods/CocoaPods/pull/7193)
+
+* Fix unnecessary whole project recompilation with static frameworks  
+  [Vladimir Gorbenko](https://github.com/volodg)
+  [#7187](https://github.com/CocoaPods/CocoaPods/issues/7187)
+
+* Prevent passing empty string to git when running `pod repo update --silent`  
   [Jon Sorrells](https://github.com/jonsorrells)
   [#7176](https://github.com/CocoaPods/CocoaPods/issues/7176)
 
@@ -29,6 +66,10 @@ To install release candidates run `[sudo] gem install cocoapods --pre`
 * Prevent multiple script phases from stripping vendored dSYM  
   [Dimitris Koutsogiorgas](https://github.com/dnkoutso)
   [#7166](https://github.com/CocoaPods/CocoaPods/pull/7166)
+
+* Static library headers should all be `Project` in Xcode header build phase  
+  [Paul Beusterien](https://github.com/paulb777)
+  [#4496](https://github.com/CocoaPods/CocoaPods/issues/4496)
 
 * Fix archiving apps with static frameworks  
   [Paul Beusterien](https://github.com/paulb777)
